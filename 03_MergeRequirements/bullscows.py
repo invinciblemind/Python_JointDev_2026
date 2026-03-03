@@ -17,11 +17,11 @@ def bullscows(guess: str, word: str) -> (int, int):
 
 
 def ask(prompt: str, valid: list[str] = None) -> str:
-    print(prompt, end='')
+    print(cowsay(prompt))
     word = input()
     if valid != None:
         while word not in valid:
-            print(prompt, end='')
+            print(cowsay(prompt))
             word = input()
     return word
 
