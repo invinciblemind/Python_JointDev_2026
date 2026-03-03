@@ -1,6 +1,7 @@
 from random import randint
 import sys
 import urllib.request
+from cowsay import cowsay
 
 def bullscows(guess: str, word: str) -> (int, int):
     bulls = 0
@@ -26,7 +27,7 @@ def ask(prompt: str, valid: list[str] = None) -> str:
 
 
 def inform(format_string: str, bulls: int, cows: int) -> None:
-    print(format_string.format(bulls, cows))
+    print(cowsay(format_string.format(bulls, cows)))
 
 
 def gameplay(ask: callable, inform: callable, words: list[str]) -> int:
