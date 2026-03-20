@@ -58,7 +58,7 @@ async def chat(reader, writer):
                         await clients[me].put(f"{cow} is not registered!")
                     else:
                         send = asyncio.create_task(reader.readline())
-                        await registered[cow].put(f"{msg}")
+                        await registered[cow].put(f"{cowsay.cowsay(msg, cow=me_cows[me])}")
                 elif cmd.startswith('yield '):
                     text = cmd.split('yield ')[1]
                     if clients[me] not in list(registered.values()):
@@ -68,7 +68,7 @@ async def chat(reader, writer):
                         send = asyncio.create_task(reader.readline())
                         for out in registered.values():
                             if out is not clients[me]:
-                                await out.put(f"{text}")
+                                await out.put(f"{cowsay.cowsay(text, cow=me_cows[me])}")
                 else:
                     send = asyncio.create_task(reader.readline())
                     await clients[me].put(f"Incorrect command!")
