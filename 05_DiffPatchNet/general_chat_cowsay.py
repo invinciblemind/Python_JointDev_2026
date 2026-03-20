@@ -3,7 +3,7 @@ import asyncio
 import cowsay
 
 clients = {}
-registered = []
+registered = {}
 cows = cowsay.list_cows()
 
 async def chat(reader, writer):
@@ -20,20 +20,26 @@ async def chat(reader, writer):
                 cmd = q.result().decode()[:-1]
                 print('1', cmd)
                 if cmd == 'who':
-                    text = ', '.join(registered)
+                    text = ', '.join(list(registered.keys()))
                     send = asyncio.create_task(reader.readline())
-                    for out in clients.values():
-                        if out is clients[me]:
-                            await out.put(f"{text}")
+                    await clients[me].put(f"{text}")
                 elif cmd == 'cows':
                     text = ', '.join(cows)
                     send = asyncio.create_task(reader.readline())
-                    for out in clients.values():
-                        if out is clients[me]:
-                            await out.put(f"{text}")
+                    await clients[me].put(f"{text}")
                 elif cmd == 'quit':
                     q = 1
                     break
+                elif cmd.startswith('login '):
+                    cow = cmd.split('login ')[1]
+                    if cow in cows and cow not in list(registered.keys()):
+                        cows.remove(cow)
+                        registered[cow] = clients[me]
+                        send = asyncio.create_task(reader.readline())
+                        await clients[me].put(f"Registered!")
+                    else:
+                        send = asyncio.create_task(reader.readline())
+                        await clients[me].put(f"Incorrect cow name!")
                 else:
                     send = asyncio.create_task(reader.readline())
                     for out in clients.values():
