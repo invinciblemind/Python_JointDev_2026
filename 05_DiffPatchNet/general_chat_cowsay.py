@@ -19,7 +19,6 @@ async def chat(reader, writer):
         for q in done:
             if q is send:
                 cmd = q.result().decode()[:-1]
-                print('1', cmd)
                 if cmd == 'who':
                     text = ', '.join(list(registered.keys()))
                     send = asyncio.create_task(reader.readline())
@@ -36,7 +35,10 @@ async def chat(reader, writer):
                     break
                 elif cmd.startswith('login '):
                     cow = cmd.split('login ')[1]
-                    if cow in cows and cow not in list(registered.keys()):
+                    if me in list(me_cows.keys()):
+                        send = asyncio.create_task(reader.readline())
+                        await clients[me].put(f"You're already registered!")
+                    elif cow in cows and cow not in list(registered.keys()):
                         cows.remove(cow)
                         registered[cow] = clients[me]
                         me_cows[me] = cow
@@ -57,13 +59,20 @@ async def chat(reader, writer):
                     else:
                         send = asyncio.create_task(reader.readline())
                         await registered[cow].put(f"{msg}")
+                elif cmd.startswith('yield '):
+                    text = cmd.split('yield ')[1]
+                    if clients[me] not in list(registered.values()):
+                        send = asyncio.create_task(reader.readline())
+                        await clients[me].put(f"You're not registered!")
+                    else:
+                        send = asyncio.create_task(reader.readline())
+                        for out in registered.values():
+                            if out is not clients[me]:
+                                await out.put(f"{text}")
                 else:
                     send = asyncio.create_task(reader.readline())
-                    for out in clients.values():
-                        if out is not clients[me]:
-                            await out.put(f"{me} {q.result().decode().strip()}")
+                    await clients[me].put(f"Incorrect command!")
             elif q is receive:
-                print('2', q.result())
                 receive = asyncio.create_task(clients[me].get())
                 writer.write(f"{q.result()}\n".encode())
                 await writer.drain()
