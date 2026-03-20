@@ -4,6 +4,7 @@ import cowsay
 
 clients = {}
 registered = {}
+me_cows = {}
 cows = cowsay.list_cows()
 
 async def chat(reader, writer):
@@ -28,6 +29,9 @@ async def chat(reader, writer):
                     send = asyncio.create_task(reader.readline())
                     await clients[me].put(f"{text}")
                 elif cmd == 'quit':
+                    del registered[me_cows[me]]
+                    cows.append(me_cows[me])
+                    del me_cows[me]
                     q = 1
                     break
                 elif cmd.startswith('login '):
@@ -35,11 +39,24 @@ async def chat(reader, writer):
                     if cow in cows and cow not in list(registered.keys()):
                         cows.remove(cow)
                         registered[cow] = clients[me]
+                        me_cows[me] = cow
                         send = asyncio.create_task(reader.readline())
                         await clients[me].put(f"Registered!")
                     else:
                         send = asyncio.create_task(reader.readline())
                         await clients[me].put(f"Incorrect cow name!")
+                elif cmd.startswith('say ') and cmd.count(' ') >= 2:
+                    text = cmd.split('say ')[1]
+                    cow, msg = text[:text.index(' ')], text[text.index(' ') + 1:]
+                    if clients[me] not in list(registered.values()):
+                        send = asyncio.create_task(reader.readline())
+                        await clients[me].put(f"You're not registered!")
+                    elif cow not in list(registered.keys()):
+                        send = asyncio.create_task(reader.readline())
+                        await clients[me].put(f"{cow} is not registered!")
+                    else:
+                        send = asyncio.create_task(reader.readline())
+                        await registered[cow].put(f"{msg}")
                 else:
                     send = asyncio.create_task(reader.readline())
                     for out in clients.values():
